@@ -1,17 +1,16 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import authRoutes from "./routes/auth.routes";
+import authRoutes from "./auth/auth.controller";
 import categoryRoutes from "./routes/category.routes";
 import productRoutes from "./routes/product.routes";
-import { errorHandler } from "./middleware/error.middleware";
 
 // Memuat variabel lingkungan
 dotenv.config();
 
 // Inisialisasi aplikasi Express
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4000;
 
 // PENTING: Middleware untuk parsing JSON harus dipasang SEBELUM rute
 app.use(express.json());
@@ -32,18 +31,10 @@ app.use("/api/products", productRoutes);
 
 // Rute utama
 app.get("/", (req, res) => {
-  res.json({ message: "Selamat datang di API Toko Bunga Meesha" });
+  res.send("Selamat datang di API Toko Bunga Meesha");
 });
 
-// Middleware penanganan kesalahan
-app.use(errorHandler);
-
 // Memulai server
-if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    console.log(`Server berjalan pada port ${PORT}`);
-  });
-}
-
-// Export untuk keperluan testing
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server running on port http://localhost:${PORT}`);
+});

@@ -3,27 +3,26 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String      @id @default(uuid()) 
-  name      String
-  email     String   @unique
-  password  String
-  phone     String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  resetToken String?
-  resetTokenExp DateTime?
-  orders    Order[]
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  phone         String?
+  role          Role     @default(USER)
+  photo_profile String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  orders        Order[]
 }
 
 model Product {
-  id          String      @id @default(uuid()) 
+  id          String      @id @default(uuid())
   name        String
   description String?
   price       Float       @default(0)
@@ -37,7 +36,7 @@ model Product {
 }
 
 model Category {
-  id          String      @id @default(uuid()) 
+  id          String    @id @default(uuid())
   name        String
   description String?
   image       String?
@@ -47,8 +46,8 @@ model Category {
 }
 
 model Order {
-  id              String      @id @default(uuid()) 
-  userId          String      // Ganti menjadi String agar konsisten
+  id              String      @id @default(uuid())
+  userId          String
   user            User        @relation(fields: [userId], references: [id])
   totalAmount     Float
   status          OrderStatus @default(PENDING)
@@ -60,10 +59,10 @@ model Order {
 }
 
 model OrderItem {
-  id        String      @id @default(uuid()) 
-  orderId   String      // Ganti menjadi String agar konsisten
+  id        String  @id @default(uuid())
+  orderId   String // Ganti menjadi String agar konsisten
   order     Order   @relation(fields: [orderId], references: [id])
-  productId String      // Ganti menjadi String agar konsisten
+  productId String // Ganti menjadi String agar konsisten
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Float
@@ -75,9 +74,9 @@ enum Role {
 }
 
 enum OrderStatus {
-  ALL       // Semua
-  PENDING   // Pending
+  ALL // Semua
+  PENDING // Pending
   PROCESSING // Diproses
-  COMPLETED  // Selesai
-  CANCELLED  // Dibatalkan
+  COMPLETED // Selesai
+  CANCELLED // Dibatalkan
 }

@@ -4,6 +4,7 @@ import cors from "cors";
 import authRoutes from "./auth/auth.controller";
 import categoryRoutes from "./routes/category.routes";
 import productRoutes from "./routes/product.routes";
+import messageRoutes from "./message/message.controller";
 
 // Memuat variabel lingkungan
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(
 
 // Rute API
 app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 

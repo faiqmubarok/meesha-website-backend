@@ -74,17 +74,17 @@ export const createCategory = async (req: Request, res: Response) => {
         uploadStream.end(file.buffer);
       });
 
-      image = result.secure_url;
+      // image = result.secure_url;
     }
 
-    const category = await prisma.category.create({
-      data: {
-        name,
-        image,
-      },
-    });
+    // const category = await prisma.category.create({
+    //   data: {
+    //     name,
+    //     // image,
+    //   },
+    // });
 
-    res.status(201).json(category);
+    // res.status(201).json(category);
   } catch (error) {
     console.error("Create category error:", error);
     res.status(500).json({ message: "Terjadi kesalahan pada server" });
@@ -140,7 +140,7 @@ export const updateCategory = async (req: Request, res: Response) => {
         where: { id },  // Menggunakan id dengan tipe string
         data: {
           name,
-          image,  // Pastikan untuk menyertakan image jika ada
+          // image,  
         },
       })
   

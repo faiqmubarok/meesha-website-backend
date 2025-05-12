@@ -27,15 +27,7 @@ router.post("/login", async (req, res) => {
     }
 
     const { user, token } = await authService.loginUserService(email, password);
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: "lax",
-      })
-      .status(200)
-      .json({ data: user, message: "Login successful" });
+    res.status(200).json({ data: user, token, message: "Login successful" });
   } catch (error: any) {
     res.status(401).json({ error: error.message });
   }

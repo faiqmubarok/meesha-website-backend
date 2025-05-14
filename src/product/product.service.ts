@@ -16,23 +16,26 @@ import {
 } from "./cloudinary.service";
 import { getCachedData, setCachedData } from "../utils/cache";
 
-export const createProductService = async (data: Product) => {
+export const createProductService = async (
+  data: Product,
+  file: Express.Multer.File | undefined
+) => {
   const existing = await getAllProducts({ name: data.name });
   if (existing.length > 0) {
     throw new Error("Product with this name already exists");
   }
 
   let imageUrl = undefined;
-  if (data.imageUrl) {
+  if (file) {
     try {
-      const uploadResult = await uploadImageToCloudinary(data.imageUrl.url);
-
+      const uploadResult = await uploadImageToCloudinary(file.buffer);
       imageUrl = {
         url: uploadResult.secure_url,
         publicId: uploadResult.public_id,
       };
     } catch (error) {
       if (error instanceof Error) {
+        console.error("Image upload failed:", error.message);
         throw new Error("Image upload failed: " + error.message);
       }
       throw new Error("Image upload failed: Unknown error");
@@ -70,43 +73,56 @@ export const getProductByIdService = async (id: string) => {
 
 export const updateProductService = async (
   id: string,
-  data: Partial<Product>
+  data: Partial<Product>,
+  file: Express.Multer.File | undefined
 ) => {
+  console.log("sampe service");
   const existing = await findProductById(id);
   if (!existing) throw new Error("Product not found");
 
-  let imageUrl: Product["imageUrl"] = existing.imageUrl as Product["imageUrl"];
+  let imageUrl: { url: string; publicId: string } | undefined = undefined;
 
-  if (data.imageUrl && data.imageUrl.url !== imageUrl?.url) {
+  if (file) {
     try {
-      if (imageUrl?.publicId) {
-        await deleteImageFromCloudinary(imageUrl.publicId);
+      const existingImageUrl = existing.imageUrl;
+
+      if (
+        existingImageUrl &&
+        typeof existingImageUrl === "object" &&
+        "publicId" in existingImageUrl &&
+        typeof existingImageUrl.publicId === "string"
+      ) {
+        await deleteImageFromCloudinary(existingImageUrl.publicId);
       }
-      const uploaded = await uploadImageToCloudinary(data.imageUrl.url);
+
+      const uploadResult = await uploadImageToCloudinary(file.buffer);
       imageUrl = {
-        url: uploaded.secure_url,
-        publicId: uploaded.public_id,
+        url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
       };
-    } catch (error: any) {
-      throw new Error("Image upload failed: " + error.message);
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      throw new Error(
+        "Image upload failed: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
     }
   }
 
-  const updatePayload: Partial<Product> = {
-    name: data.name,
-    description: data.description,
-    price: data.price,
-    stock: data.stock,
-    size: data.size,
-    variant: data.variant,
-    imageUrl,
-    category: data.category,
-    type: data.type,
-    objective: data.objective,
-    color: data.color,
+  // Persiapkan data untuk update
+  const updatedData: Partial<Product> = {
+    ...data,
   };
 
-  return await updateProduct(id, updatePayload);
+  // Jika ada imageUrl baru, tambahkan ke updatedData
+  if (imageUrl) {
+    updatedData.imageUrl = imageUrl;
+  }
+
+  // Melakukan update produk di database
+  const updated = await updateProduct(id, updatedData);
+
+  return updated;
 };
 
 export const deleteProductService = async (id: string) => {

@@ -39,10 +39,6 @@ export type UpdateProductInput = {
   price: number;
   stock: number;
   description: string;
-  imageUrl: {
-    url: string;
-    publicId: string;
-  };
   size: "S" | "M" | "L" | "XL" | "XXL";
   variant: string[];
   categoryId: string;

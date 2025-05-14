@@ -65,16 +65,16 @@ export const getAllProducts = async (
     },
     include: {
       category: {
-        select: { key: true, name: true },
+        select: { id: true, key: true, name: true },
       },
       type: {
-        select: { key: true, name: true },
+        select: { id: true, key: true, name: true },
       },
       objective: {
-        select: { key: true, name: true },
+        select: { id: true, key: true, name: true },
       },
       color: {
-        select: { key: true, name: true },
+        select: { id: true, key: true, name: true },
       },
     },
     skip,

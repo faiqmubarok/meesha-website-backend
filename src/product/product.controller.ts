@@ -1,5 +1,8 @@
 import express from "express";
 import { Request, Response } from "express";
+import multer from "multer";
+const storage = multer.memoryStorage();
+const upload = multer({ storage }).single("imageUrl");
 import {
   createProductService,
   getAllProductsService,
@@ -8,7 +11,7 @@ import {
   deleteProductService,
   getMetaService,
 } from "./product.service";
-import { ProductFilter, UpdateProductInput } from "../types/product";
+import { Product, ProductFilter, UpdateProductInput } from "../types/product";
 import { Size } from "@prisma/client";
 
 const router = express.Router();
@@ -69,17 +72,31 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/", async (req: Request, res: Response) => {
-  const data = req.body;
+router.post("/", upload, async (req, res) => {
   try {
-    if (!data.name) {
-      throw new Error("Name are required");
-    }
-    const product = await createProductService(data);
-    res
-      .status(201)
-      .json({ data: product, message: "Product created successfully" });
+    const raw = req.body;
+
+    const parsedData = {
+      ...raw,
+      price: Number(raw.price),
+      stock: Number(raw.stock),
+      variant: JSON.parse(raw.variant),
+      category: JSON.parse(raw.category),
+      type: JSON.parse(raw.type),
+      objective: JSON.parse(raw.objective),
+      color: JSON.parse(raw.color),
+    };
+
+    const file = req.file;
+
+    const product = await createProductService(parsedData, file);
+
+    res.status(201).json({
+      data: product,
+      message: "Product created successfully",
+    });
   } catch (error: any) {
+    console.error(error);
     res.status(400).json({ error: error.message || "Bad Request" });
   }
 });
@@ -95,72 +112,90 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", upload, async (req: Request, res: Response) => {
   try {
+    const body = req.body;
+
+    const parsedData = {
+      ...body,
+      price: Number(body.price),
+      stock: Number(body.stock),
+      variant: JSON.parse(body.variant),
+      category: JSON.parse(body.category),
+      type: JSON.parse(body.type),
+      objective: JSON.parse(body.objective),
+      color: JSON.parse(body.color),
+    };
+
+    console.log("data masuk");
+
+    const file = req.file;
+
     const {
       name,
       price,
       stock,
       description,
-      imageUrl,
       size,
       variant,
-      categoryId,
-      typeId,
-      objectiveId,
-      colorId,
-    } = req.body;
+      category,
+      type,
+      objective,
+      color,
+    } = parsedData;
+
+    console.log("data parse", parsedData, file);
 
     if (
       !name ||
       !price ||
       !stock ||
       !description ||
-      // !imageUrl ||
       !size ||
       !variant ||
-      !categoryId ||
-      !typeId ||
-      !objectiveId ||
-      !colorId
+      !category ||
+      !type ||
+      !objective ||
+      !color
     ) {
       return res.status(400).json({ error: "Semua field wajib diisi" });
     }
 
-    const allowedSizes = ["S", "M", "L", "XL", "XXL"];
-    if (!allowedSizes.includes(size)) {
-      return res.status(400).json({ error: "Ukuran tidak valid" });
-    }
+    console.log("berhasil validasi");
 
-    const payload: UpdateProductInput = {
+    const payload: Omit<Product, "id"> = {
       name,
       price,
       stock,
       description,
-      imageUrl,
       size,
       variant,
-      categoryId,
-      typeId,
-      objectiveId,
-      colorId,
+      category,
+      type,
+      objective,
+      color,
     };
 
-    const updated = await updateProductService(req.params.id, payload);
+    const updated = await updateProductService(req.params.id, payload, file);
     return res.status(200).json({
       data: updated,
       message: "Product updated successfully",
     });
   } catch (error: any) {
+    console.error(error);
     return res
       .status(400)
       .json({ error: error.message || "Something went wrong" });
   }
 });
 
-router.patch("/:id", async (req: Request, res: Response) => {
+router.patch("/:id", upload, async (req: Request, res: Response) => {
   try {
-    const updatedProduct = await updateProductService(req.params.id, req.body);
+    const updatedProduct = await updateProductService(
+      req.params.id,
+      req.body,
+      req.file
+    );
     res
       .status(200)
       .json({ data: updatedProduct, message: "Product updated successfully" });

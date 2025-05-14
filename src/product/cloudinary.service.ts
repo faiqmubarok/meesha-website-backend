@@ -6,23 +6,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadImageToCloudinary = async (image: string) => {
+export const uploadImageToCloudinary = async (imageBuffer: Buffer) => {
   return new Promise<{ secure_url: string; public_id: string }>(
     (resolve, reject) => {
-      cloudinary.uploader.upload(
-        image,
-        { resource_type: "auto" },
-        (error, result) => {
-          if (error || !result) {
-            reject(error || new Error("Upload failed, result is undefined"));
-          } else {
-            resolve({
-              secure_url: result.secure_url,
-              public_id: result.public_id,
-            });
+      cloudinary.uploader
+        .upload_stream(
+          { resource_type: "auto" }, // Menggunakan stream untuk menerima buffer
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else if (result) {
+              // Pastikan result ada sebelum mengakses properti
+              resolve({
+                secure_url: result.secure_url,
+                public_id: result.public_id,
+              });
+            } else {
+              reject(new Error("Upload failed, result is undefined"));
+            }
           }
-        }
-      );
+        )
+        .end(imageBuffer); // Mengirim buffer sebagai stream
     }
   );
 };
